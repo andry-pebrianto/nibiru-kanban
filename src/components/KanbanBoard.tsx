@@ -148,7 +148,7 @@ export default function KanbanBoard() {
   };
 
   const onDragStart = (event: DragStartEvent) => {
-    console.log("DRAG START", event);
+    // console.log("DRAG START", event);
 
     if (event.active.data.current?.type === "Column") {
       setActiveColumn(event.active.data.current.column);
@@ -162,7 +162,7 @@ export default function KanbanBoard() {
   };
 
   const onDragEnd = (event: DragEndEvent) => {
-    console.log("DRAG END", event);
+    // console.log("DRAG END", event);
 
     setActiveColumn(null);
     setActiveTask(null);
@@ -172,49 +172,81 @@ export default function KanbanBoard() {
     if (!over) return;
     if (active.id === over.id) return;
 
-    setColumns((columns) => {
+    // switch column
+    const isActiveAColumn = active.data.current?.type === "Column";
+    const isOverAColumn = over.data.current?.type === "Column";
+    if (isActiveAColumn && isOverAColumn) {
       const originalPosition = getColumnPosition(active.id);
       const newPosition = getColumnPosition(over?.id);
 
-      return arrayMove(columns, originalPosition, newPosition);
-    });
+      console.log(
+        `Switch Column with Id ${columns[originalPosition].id} to ${columns[newPosition].id}`
+      );
+
+      setColumns((columns) => {
+        return arrayMove(columns, originalPosition, newPosition);
+      });
+    }
+
+    // switch task
+    const isActiveATask = active.data.current?.type === "Task";
+    const isOverATask = over.data.current?.type === "Task";
+    if (isActiveATask && isOverATask) {
+      const originalPosition = getTaskPosition(active.id);
+      const newPosition = getTaskPosition(over?.id);
+
+      console.log(
+        `Switch Task with Id ${tasks[originalPosition].id} to ${tasks[newPosition].id}`
+      );
+
+      setTasks((tasks) => {
+        return arrayMove(tasks, originalPosition, newPosition);
+      });
+    }
   };
 
   const onDragOver = (event: DragOverEvent) => {
-    console.log("DRAG OVER", event);
+    // console.log("DRAG OVER", event);
 
     const { active, over } = event;
 
     if (!over) return;
     if (active.id === over.id) return;
 
+    // switch task to other column
     const isActiveATask = active.data.current?.type === "Task";
     const isOverATask = over.data.current?.type === "Task";
-
-    if (!isActiveATask) return;
-
-    // menyeret task ke task yang lain
     if (isActiveATask && isOverATask) {
-      setTasks((tasks) => {
-        const originalPosition = getTaskPosition(active.id);
-        const newPosition = getTaskPosition(over?.id);
+      const originalPosition = getTaskPosition(active.id);
+      const newPosition = getTaskPosition(over?.id);
+
+      if (tasks[originalPosition].columnId !== tasks[newPosition].columnId) {
+        console.log(
+          `Switch Task with Id ${tasks[originalPosition].id} from Column with Id ${tasks[originalPosition].columnId} to ${tasks[newPosition].columnId}`
+        );
 
         tasks[originalPosition].columnId = tasks[newPosition].columnId;
-
-        return arrayMove(tasks, originalPosition, newPosition);
-      });
+        setTasks((tasks) => {
+          return arrayMove(tasks, originalPosition, newPosition);
+        });
+      }
     }
 
+    // switch task to empty column
     const isOverAColumn = over.data.current?.type === "Column";
-
-    // menyeret task ke column yang kosong
     if (isActiveATask && isOverAColumn) {
+      const originalPosition = getTaskPosition(active.id);
+      const columnsTarget = getColumnPosition(over.id);
+
       setTasks((tasks) => {
-        const originalPosition = getTaskPosition(active.id);
+        console.log(
+          `Switch Task with Id ${tasks[originalPosition].id} from Column with Id ${tasks[originalPosition].columnId} to ${columns[columnsTarget].id}`
+        );
 
         tasks[originalPosition].columnId = over.id;
 
-        return arrayMove(tasks, originalPosition, originalPosition);
+        // just refresh dnd-kit kanban data
+        return arrayMove(tasks, originalPosition, originalPosition); // same value
       });
     }
   };
