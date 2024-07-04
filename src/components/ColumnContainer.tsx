@@ -79,7 +79,7 @@ export default function ColumnContainer(props: IColumnContainerProps) {
       >
         <div className="flex items-center gap-3 w-full">
           <div className="h-6 w-6 bg-slate-700 text-white flex justify-center items-center">
-            <span className="mt-0.5">0</span>
+            <span className="mt-0.5">{tasks.length}</span>
           </div>
           <div onClick={() => setEditMode(true)} className="w-full">
             {editMode ? (
