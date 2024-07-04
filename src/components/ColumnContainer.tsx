@@ -16,6 +16,7 @@ interface IColumnContainerProps {
   createTask: (columnId: TId) => void;
   deleteTask: (taskId: TId) => void;
   updateTask: (taskId: TId, title: string) => void;
+  clearRecycleBin: () => void;
 }
 
 export default function ColumnContainer(props: IColumnContainerProps) {
@@ -27,6 +28,7 @@ export default function ColumnContainer(props: IColumnContainerProps) {
     tasks,
     deleteTask,
     updateTask,
+    clearRecycleBin,
   } = props;
 
   const [editMode, setEditMode] = useState(false);
@@ -111,12 +113,21 @@ export default function ColumnContainer(props: IColumnContainerProps) {
           </div>
         )}
       </div>
-      <button
-        onClick={() => createTask(column.id)}
-        className="min-w-40 pt-1 pb-0.5 border-2 border-slate-700 rounded-sm hover:bg-slate-100 active:bg-slate-200 block mx-auto mt-4"
-      >
-        Add Task
-      </button>
+      {column.id !== 1 ? (
+        <button
+          onClick={() => createTask(column.id)}
+          className="min-w-40 pt-1 pb-0.5 border-2 border-slate-700 rounded-sm hover:bg-slate-100 active:bg-slate-200 block mx-auto mt-4"
+        >
+          Add Task
+        </button>
+      ) : (
+        <button
+          onClick={() => clearRecycleBin()}
+          className="min-w-40 pt-1 pb-0.5 border-2 border-slate-700 rounded-sm hover:bg-slate-100 active:bg-slate-200 block mx-auto mt-4"
+        >
+          Clear Recycle Bin
+        </button>
+      )}
       <div className="overflow-auto hide-scrollbar h-[430px] py-4 px-2">
         <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (

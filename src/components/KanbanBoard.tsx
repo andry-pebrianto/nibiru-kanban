@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   DndContext,
@@ -44,6 +44,25 @@ export default function KanbanBoard() {
   const [activeColumn, setActiveColumn] = useState<IColumn | null>(null);
   const [activeTask, setActiveTask] = useState<ITask | null>(null);
 
+  useEffect(() => {
+    const columnsLocalStorage = localStorage.getItem("columns");
+    const tasksLocalStorage = localStorage.getItem("tasks");
+
+    if (columnsLocalStorage) {
+      setColumns(JSON.parse(columnsLocalStorage));
+    }
+    if (tasksLocalStorage) {
+      setTasks(JSON.parse(tasksLocalStorage));
+    }
+  }, []);
+
+  const saveDataToLocalStorage = () => {
+    localStorage.setItem("columns", JSON.stringify(columns));
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+
+    alert("Saved to your Browser Local Storage");
+  };
+
   const getColumnPosition = (columnId: TId) => {
     return columns.findIndex((column) => column.id === columnId);
   };
@@ -66,7 +85,19 @@ export default function KanbanBoard() {
 
   const deleteColumn = (columnId: TId) => {
     setColumns((columns) => columns.filter((column) => column.id !== columnId));
-    setTasks((tasks) => tasks.filter((task) => task.columnId !== columnId));
+    // memindahkan task dari kolom yang terhapus ke recycle bin
+    setTasks((tasks) =>
+      tasks.map((task) => {
+        if (task.columnId === columnId) {
+          return {
+            ...task,
+            columnId: 1,
+          };
+        }
+
+        return task;
+      })
+    );
   };
 
   const updateColumn = (columnId: TId, title: string) => {
@@ -110,6 +141,10 @@ export default function KanbanBoard() {
 
       setTasks(newTask);
     }
+  };
+
+  const clearRecycleBin = () => {
+    setTasks((tasks) => tasks.filter((task) => task.columnId !== 1));
   };
 
   const onDragStart = (event: DragStartEvent) => {
@@ -158,7 +193,7 @@ export default function KanbanBoard() {
 
     if (!isActiveATask) return;
 
-    // Menyeret Task ke Task yang lain
+    // menyeret task ke task yang lain
     if (isActiveATask && isOverATask) {
       setTasks((tasks) => {
         const originalPosition = getTaskPosition(active.id);
@@ -172,7 +207,7 @@ export default function KanbanBoard() {
 
     const isOverAColumn = over.data.current?.type === "Column";
 
-    // Menyeret Task ke Column yang kosong
+    // menyeret task ke column yang kosong
     if (isActiveATask && isOverAColumn) {
       setTasks((tasks) => {
         const originalPosition = getTaskPosition(active.id);
@@ -198,12 +233,20 @@ export default function KanbanBoard() {
 
   return (
     <div className="container mx-auto max-w-6xl p-5 border-2 border-slate-700 rounded-sm mb-10">
-      <button
-        className="min-w-32 pt-2 pb-1.5 border-2 border-slate-700 rounded-sm hover:bg-slate-100 active:bg-slate-200 mb-4"
-        onClick={createColumn}
-      >
-        Add Column
-      </button>
+      <div className="flex justify-between">
+        <button
+          className="min-w-32 pt-2 pb-1.5 border-2 border-slate-700 rounded-sm hover:bg-slate-100 active:bg-slate-200 mb-4"
+          onClick={createColumn}
+        >
+          Add Column
+        </button>
+        <button
+          className="min-w-32 pt-2 pb-1.5 border-2 border-slate-700 rounded-sm hover:bg-slate-100 active:bg-slate-200 mb-4"
+          onClick={saveDataToLocalStorage}
+        >
+          Save Data
+        </button>
+      </div>
       <DndContext
         sensors={sensors}
         onDragStart={onDragStart}
@@ -226,6 +269,7 @@ export default function KanbanBoard() {
                 tasks={tasks.filter((task) => task.columnId === column.id)}
                 deleteTask={deleteTask}
                 updateTask={updateTask}
+                clearRecycleBin={clearRecycleBin}
               />
             ))}
           </SortableContext>
@@ -244,6 +288,7 @@ export default function KanbanBoard() {
                 )}
                 deleteTask={deleteTask}
                 updateTask={updateTask}
+                clearRecycleBin={clearRecycleBin}
               />
             )}
 
